@@ -2,33 +2,32 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const http = require('http'); // HTTP server ke liye
+const http = require('http');
 const { initializeWhatsAppService } = require('./services/whatsappService');
 
+// App Initialization
 const app = express();
 const server = http.createServer(app);
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000' })); // Frontend URL
 app.use(express.json());
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB Connected...'))
-  .catch(err => console.error(err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected Successfully...'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
-// WhatsApp Service ko initialize karein
+// Initialize WhatsApp Service and Socket.IO
 initializeWhatsAppService(server);
 
-
-// Routes
+// API Routes
+app.get('/', (req, res) => res.send('API is running...'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/keywords', require('./routes/keywordRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
-// User-specific routes
-const { router: userRouter, userController } = require('./routes/userRoutes');
-app.use('/api/user', userRouter);
+app.use('/api/user', require('./routes/userRoutes'));
 
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start Server
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => console.log(`Backend server is active on port ${PORT}`));
